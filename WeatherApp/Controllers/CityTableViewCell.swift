@@ -17,7 +17,7 @@ class CityTableViewCell: UITableViewCell {
     func configure(with cityWeather: CityWeather){
         cityNameLabel.text = cityWeather.name
         weatherImage.image = cityWeather.weather
-        tempLabel.text = cityWeather.temp
+        tempLabel.text = String(cityWeather.temp)
     }
 
 }

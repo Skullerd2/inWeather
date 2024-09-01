@@ -131,7 +131,13 @@
                             <outlet property="delegate" destination="0uV-9U-fz8" id="W8d-ok-pls"/>
                         </connections>
                     </tableView>
-                    <navigationItem key="navigationItem" title="Weather" id="UPx-V2-iEi"/>
+                    <navigationItem key="navigationItem" title="Weather" id="UPx-V2-iEi">
+                        <barButtonItem key="rightBarButtonItem" systemItem="add" id="GuN-kf-fz1">
+                            <connections>
+                                <action selector="addButtonTapped:" destination="0uV-9U-fz8" id="2gp-b5-Rlm"/>
+                            </connections>
+                        </barButtonItem>
+                    </navigationItem>
                 </tableViewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="Sfx-Ep-6Og" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>

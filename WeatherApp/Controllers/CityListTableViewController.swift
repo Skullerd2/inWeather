@@ -35,4 +35,18 @@ class CityListTableViewController: UITableViewController {
         return cell
     }
     
+    
+    @IBAction func addButtonTapped(_ sender: Any) {
+        let alertController = UIAlertController(title: "New city", message: "Add new city", preferredStyle: .alert)
+        alertController.addTextField()
+        let addCityAction = UIAlertAction(title: "Add", style: .default) { [weak self] _ in
+            self?.city.append(CityWeather(name: (alertController.textFields?.first?.text)!))
+            self?.tableView.reloadData()
+        }
+        let cancelCityAction = UIAlertAction(title: "Cancel", style: .cancel)
+        alertController.addAction(addCityAction)
+        alertController.addAction(cancelCityAction)
+        present(alertController, animated: true)
+    }
+    
 }

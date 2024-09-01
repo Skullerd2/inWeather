@@ -11,14 +11,14 @@ import UIKit
 struct CityWeather{
     var name: String
     var weather: UIImage
-    var temp: String
+    var temp: Int
     
-    static let example = CityWeather(name: "St. Petersburg", weather: UIImage(systemName: "sun.max.fill")!, temp: "15°")
+    static let example = CityWeather(name: "St. Petersburg")
     
-    init(name: String, weather: UIImage, temp: String) {
+    init(name: String){
         self.name = name
-        self.weather = weather
-        self.temp = temp
+        weather = UIImage(systemName: "sun.max.fill")!
+        temp = 15
     }
 }
 
