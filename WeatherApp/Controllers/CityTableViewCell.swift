@@ -14,10 +14,10 @@ class CityTableViewCell: UITableViewCell {
     @IBOutlet weak var weatherImage: UIImageView!
     @IBOutlet weak var tempLabel: UILabel!
     
-    func configure(with cityWeather: CityWeather){
-        cityNameLabel.text = cityWeather.name
-        weatherImage.image = cityWeather.weather
-        tempLabel.text = String(cityWeather.temp)
-    }
+//    func configure(with weatherModel: WeatherModel){
+//        cityNameLabel.text = weatherModel.name
+//        weatherImage.image = weatherModel.weather
+//        tempLabel.text = String(weatherModel.temp)
+//    }
 
 }
