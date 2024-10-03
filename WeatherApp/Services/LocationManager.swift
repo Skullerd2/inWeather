@@ -16,12 +16,11 @@ final class LocationManager: NSObject, CLLocationManagerDelegate{
     
     private override init() {}
     
-    func fetchCurrentLocation(senderVC: String ,completion: @escaping (Double, Double) -> Void){
+    func fetchCurrentLocation(completion: @escaping (Double, Double) -> Void){
         locationManager.delegate = self
         locationManager.requestWhenInUseAuthorization()
         locationManager.requestLocation()
         
-        sender = senderVC
         self.completionHandler = completion
     }
     

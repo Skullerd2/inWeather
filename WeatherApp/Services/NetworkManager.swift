@@ -13,7 +13,7 @@ final class NetworkManager{
         let decoder = JSONDecoder()
         decoder.keyDecodingStrategy = .convertFromSnakeCase
         
-        AF.request("https://api.openweathermap.org/data/2.5/weather?lat=\(lat)&lon=\(lon)&appid=8d46173d317133df98d24654a48cd96f")
+        AF.request("https://api.openweathermap.org/data/2.5/weather?lat=\(lat)&lon=\(lon)&appid=8d46173d317133df98d24654a48cd96f&units=metric")
             .validate()
             .responseDecodable(of: WeatherModel.self, decoder: decoder) { dataResponse in
                 switch dataResponse.result{
