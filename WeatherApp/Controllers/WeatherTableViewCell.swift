@@ -1,10 +1,3 @@
-//
-//  CityTableViewCell.swift
-//  WeatherApp
-//
-//  Created by Vadim on 28.08.2024.
-//
-
 import UIKit
 
 class WeatherTableViewCell: UITableViewCell {

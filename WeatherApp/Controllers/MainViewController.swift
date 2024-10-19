@@ -21,15 +21,29 @@ struct ViewControllerPrewiew: UIViewControllerRepresentable{
 
 class MainViewController: UIViewController {
     
+    private let networkManager = NetworkManager.shared
+    private let locationManager = LocationManager.shared
+    
+    private var location = LocationModel(main: nil)
+    private var weather = WeatherModel(weather: nil, main: nil, wind: nil, rain: nil, snow: nil)
+    
+    private var currentCity: String = ""
+    
+    var weatherInLocation = CityWeatherModel(cityName: "-", temp: 0, feelsLike: 0, weather: "-", humiditiy: 0, windSpeed: 0)
+    var cityList = [CityWeatherModel]()
+    
     var data = ["Ячейка 1", "Ячейка 2", "Ячейка 3"]
     
     var time: [String] = ["now"]
     
     var weatherData: [(key: String, value: String)] = [("Feels like", "19"), ("Wind", "19km/h"), ("Humidity", "64%")]
+    var forecastOneHourTemp: [Int] = []
+    var forecastOneHourWeather: [Int] = []
+    var currentHour: Int = 0
     
     //Elements of interface
     let pageControl = UIPageControl()
-    let weatherImageView = UIImageView()
+    var weatherImageView = UIImageView()
     let searchTextField = UITextField()
     let cityNameLabel = UILabel()
     let degreeLabel = UILabel()
@@ -39,9 +53,14 @@ class MainViewController: UIViewController {
     let todayWeatherLabel = UILabel()
     let forecastButton = UIButton()
     
+    let layout = UICollectionViewFlowLayout()
+    
     override func viewDidLoad() {
         super.viewDidLoad()
+        
         fetchCurrentTime()
+        fetchCurrentWeatherInCurrentLocation()
+        
         addSearchTextField()
         addWeatherImageView()
         addCityNameLabel()
@@ -51,28 +70,26 @@ class MainViewController: UIViewController {
         addTableView()
         addTodayWeatherLabel()
         addForecastButton()
-        addCollectionView()
+        //        addCollectionView()
     }
     
     
     func fetchCurrentTime(){
         let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "HH"
+        dateFormatter.dateFormat = "HH:00"
+        dateFormatter.locale = Locale(identifier: "en_US_POSIX")
+        let calendar = Calendar.current
         
-        let currentHourString = dateFormatter.string(from: Date())
-        var hourInt = Int(currentHourString)!
-        for i in 0...22{
-            hourInt += 1
-            if hourInt == 24{
-                hourInt = 0
-                time.append("00")
-                continue
-            } else if hourInt < 10{
-                time.append("0\(hourInt)")
-            } else{
-                time.append(String(hourInt))
+        var currentDate = Date()
+        
+        for i in 0..<23{
+            currentDate = calendar.date(byAdding: .hour, value: 1, to: currentDate)!
+            let hourString = dateFormatter.string(from: currentDate)
+            if i == 0{
+                print(hourString)
+                currentHour = Int(hourString.prefix(2))!
             }
-                
+            time.append("\(hourString)")
         }
     }
 }
@@ -105,7 +122,7 @@ extension MainViewController{
         NSLayoutConstraint.activate([
             collectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 0),
             collectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: 0),
-            collectionView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
+            collectionView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -2),
             collectionView.topAnchor.constraint(equalTo: todayWeatherLabel.bottomAnchor, constant: 13)
         ])
     }
@@ -114,15 +131,15 @@ extension MainViewController{
         forecastButton.setTitle("Next 7 days", for: .normal)
         forecastButton.setImage(UIImage(systemName: "chevron.right"), for: .normal)
         forecastButton.semanticContentAttribute = .forceRightToLeft
-        forecastButton.tintColor = .fromHex("2C2C2C")
-        forecastButton.setTitleColor(.fromHex("2C2C2C"), for: .normal)
+        forecastButton.tintColor = .gray
+        forecastButton.setTitleColor(.gray, for: .normal)
         forecastButton.titleLabel?.font = UIFont(name: "Poppins-Medium", size: 15)
         forecastButton.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(forecastButton)
         
         NSLayoutConstraint.activate([
             forecastButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -32),
-            forecastButton.topAnchor.constraint(equalTo: tableView.bottomAnchor, constant: 20),
+            forecastButton.topAnchor.constraint(equalTo: tableView.bottomAnchor, constant: 5),
         ])
     }
     
@@ -136,7 +153,7 @@ extension MainViewController{
         
         NSLayoutConstraint.activate([
             todayWeatherLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 32),
-            todayWeatherLabel.topAnchor.constraint(equalTo: tableView.bottomAnchor, constant: 20)
+            todayWeatherLabel.topAnchor.constraint(equalTo: tableView.bottomAnchor, constant: 5)
         ])
     }
     
@@ -150,12 +167,12 @@ extension MainViewController{
         tableView.register(WeatherTableViewCell.self, forCellReuseIdentifier: "cell")
         
         view.addSubview(tableView)
-        
+        let height = view.frame.height / 11
         NSLayoutConstraint.activate([
-            tableView.topAnchor.constraint(equalTo: degreeLabel.bottomAnchor, constant: 16),
+            tableView.topAnchor.constraint(equalTo: degreeLabel.bottomAnchor, constant: 3),
             tableView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 16),
             tableView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -16),
-            tableView.heightAnchor.constraint(equalToConstant: 70 * CGFloat(data.count) + 9 * 2)
+            tableView.heightAnchor.constraint(equalToConstant: height * CGFloat(data.count) + 2 * height / 10)
         ])
     }
     
@@ -188,7 +205,7 @@ extension MainViewController{
     }
     
     func addDegreeLabel(){
-        degreeLabel.text = "19"
+        degreeLabel.text = String(Int(weatherInLocation.temp))
         degreeLabel.font = UIFont(name: "Poppins-Medium", size: 70)
         degreeLabel.tintColor = .fromHex("2C2C2C")
         degreeLabel.translatesAutoresizingMaskIntoConstraints = false
@@ -201,7 +218,7 @@ extension MainViewController{
     }
     
     func addCityNameLabel(){
-        cityNameLabel.text = "St. Petersburg"
+        cityNameLabel.text = weatherInLocation.cityName
         cityNameLabel.font = UIFont(name: "Poppins-SemiBold", size: 30)
         cityNameLabel.tintColor = .fromHex("2C2C2C")
         cityNameLabel.translatesAutoresizingMaskIntoConstraints = false
@@ -215,13 +232,14 @@ extension MainViewController{
     
     func addWeatherImageView(){
         weatherImageView.image = UIImage(named: "cloudyAndSun")
+        
         weatherImageView.translatesAutoresizingMaskIntoConstraints = false
         weatherImageView.contentMode = .scaleAspectFill
         view.addSubview(weatherImageView)
         NSLayoutConstraint.activate([
-            weatherImageView.topAnchor.constraint(equalTo: searchTextField.bottomAnchor, constant: 50),
+            weatherImageView.topAnchor.constraint(equalTo: searchTextField.bottomAnchor, constant: 40),
             weatherImageView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            weatherImageView.widthAnchor.constraint(equalToConstant: 123),
+            weatherImageView.widthAnchor.constraint(equalToConstant: view.frame.height / 7),
             weatherImageView.heightAnchor.constraint(equalTo: weatherImageView.widthAnchor),
         ])
     }
@@ -275,8 +293,15 @@ extension MainViewController: UICollectionViewDataSource, UICollectionViewDelega
         guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "hourCell", for: indexPath) as? HourForecastCollectionViewCell else {
             return UICollectionViewCell()
         }
-        cell.layer.cornerRadius = 13
+        cell.layer.cornerRadius = 11
         cell.timeLabel.text = time[indexPath.item]
+        if indexPath.row == 0{
+            cell.weatherImage.image = self.weatherImageView.image
+            cell.tempLabel.text = "\(degreeLabel.text!)°"
+        } else{
+            updateImageForecast(imageView: &cell.weatherImage, code: forecastOneHourWeather[indexPath.item])
+            cell.tempLabel.text = "\(forecastOneHourTemp[indexPath.item])°"
+        }
         return cell
     }
     
@@ -285,7 +310,7 @@ extension MainViewController: UICollectionViewDataSource, UICollectionViewDelega
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        return CGSize(width: 50, height: collectionView.frame.height)
+        return CGSize(width: collectionView.frame.width / 6.7, height: collectionView.frame.height)
     }
 }
 
@@ -314,15 +339,121 @@ extension MainViewController: UITableViewDelegate, UITableViewDataSource{
     }
     
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        return 70
+        return view.frame.height / 12
     }
     
     func tableView(_ tableView: UITableView, heightForFooterInSection section: Int) -> CGFloat {
-        return 9
+        return (view.frame.height / 12) / 10
     }
     
     func tableView(_ tableView: UITableView, viewForFooterInSection section: Int) -> UIView? {
         return UIView()
+    }
+}
+
+//MARK: - Network
+
+extension MainViewController{
+    
+    private func fetchHourlyForecast(lat: Double, lon: Double){
+        networkManager.fetchHourlyForecast(lat: lat, lon: lon) { [weak self] result in
+            switch result {
+            case .success(let forecast):
+                self?.createArray(dayArray: forecast.forecast.forecastday)
+            case .failure(let failure):
+                let alertController = UIAlertController(title: "Error", message: "Error of fetching forecast", preferredStyle: .alert)
+                let alertAction = UIAlertAction(title: "F*CK THIS APPLICATION!", style: .cancel)
+                alertController.addAction(alertAction)
+                self?.present(alertController, animated: true)
+                print(failure)
+            }
+        }
+    }
+    
+    private func fetchCurrentWeather(lat: Double, lon: Double, city: String){
+        networkManager.fetchCurrentWeather(lat: lat, lon: lon) { [weak self] result in
+            switch result{
+            case .success(let weather):
+                self?.weather = weather
+                //                    let newCity = CityWeatherModel(cityName: city, temp: weather.main!.temp, weather: weather.weather[0]!.description, humiditiy: weather.main!.humidity, windSpeed: weather.wind!.speed, rain: weather.rain?.oneHour, snow: weather.snow?.oneHour)
+                //                    self?.cityList.append(newCity)
+                let weather = CityWeatherModel(cityName: city, temp: weather.main!.temp, feelsLike: weather.main!.feelsLike, weather: weather.weather[0]!.description, humiditiy: weather.main!.humidity, windSpeed: weather.wind!.speed, rain: weather.rain?.oneHour, snow: weather.snow?.oneHour)
+                print(weather)
+                self?.weatherInLocation = weather
+                self?.tableView.reloadData()
+                self?.updateImage(imageView: &self!.weatherImageView ,main: (self?.weather.weather[0]!.main)!, description: (self?.weather.weather[0]!.description)!)
+                self?.degreeLabel.text = String(Int((weather.temp).rounded()))
+                //Заглушка
+                self?.weatherData[0].value = "\(String(Int((weather.feelsLike).rounded())))°"
+                self?.weatherData[1].value = "\(String(Int((weather.windSpeed).rounded())))m/h"
+                self?.weatherData[2].value = "\(String(weather.humiditiy))%"
+                self?.addCollectionView()
+            case .failure(let error):
+                let alertController = UIAlertController(title: "Error", message: "Error of fetching weather", preferredStyle: .alert)
+                let alertAction = UIAlertAction(title: "F*CK THIS APPLICATION!", style: .cancel)
+                alertController.addAction(alertAction)
+                self?.present(alertController, animated: true)
+                print(error)
+            }
+            
+        }
+    }
+    
+    private func fetchCurrentWeatherInCurrentLocation(){
+        var city: String = ""
+        
+        self.locationManager.fetchCurrentLocation() { [weak self] lat, lon in
+            self?.fetchHourlyForecast(lat: lat, lon: lon)
+            self?.locationManager.getCity(lat: lat, lon: lon) { location in
+                city = location
+                self?.cityNameLabel.text = city
+                self?.fetchCurrentWeather(lat: lat, lon: lon, city: city)
+                print(city)
+            }
+        }
+    }
+}
+
+extension MainViewController{
+    private func createArray(dayArray: [ForecastDay]){
+        print(dayArray)
+        for i in currentHour...23{
+            forecastOneHourTemp.append(Int(truncating: NSDecimalNumber(decimal: dayArray[0].hour[i].tempC)))
+            forecastOneHourWeather.append(dayArray[0].hour[i].condition.code)
+        }
+        for i in 0...23{
+            if (forecastOneHourTemp.count < 24){
+                forecastOneHourTemp.append(Int(truncating: NSDecimalNumber(decimal: dayArray[1].hour[i].tempC)))
+                forecastOneHourWeather.append(dayArray[1].hour[i].condition.code)
+            } else{
+                break
+            }
+        }
+        print(forecastOneHourTemp, forecastOneHourWeather)
+    }
+    
+    private func updateImage(imageView: inout UIImageView, main: String, description: String){
+        if main == "Clear"{
+            imageView.image = UIImage(named: "sunny")
+        } else if main == "Rain" || main == "Snow" || main == "Drizzle" || main == "Thunderstorm"{
+            imageView.image = UIImage(named: "rainy")
+        } else if main == "Clouds" && description == "few clouds"{
+            imageView.image = UIImage(named: "cloudyAndSun")
+        } else if main == "Clouds"{
+            imageView.image = UIImage(named: "cloudy")
+        }
+    }
+    
+    private func updateImageForecast(imageView: inout UIImageView, code: Int){
+        if code == 1000{
+            imageView.image = UIImage(named: "sunny")
+        } else if code == 1003 || code == 3{
+            imageView.image = UIImage(named: "cloudyAndSun")
+        } else if code >= 1006 && code <= 1147{
+            imageView.image = UIImage(named: "cloudy")
+        } else {
+            imageView.image = UIImage(named: "rainy")
+        }
     }
 }
 
