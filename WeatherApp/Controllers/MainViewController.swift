@@ -1,6 +1,6 @@
 import UIKit
+import CoreLocation
 import SwiftUI
-
 struct ViewControllerPrewiew: UIViewControllerRepresentable{
     
     let viewControllerGenerator: () -> UIViewController
@@ -19,7 +19,7 @@ struct ViewControllerPrewiew: UIViewControllerRepresentable{
     
 }
 
-class MainViewController: UIViewController {
+class MainViewController: UIViewController, UITextFieldDelegate {
     
     private let networkManager = NetworkManager.shared
     private let locationManager = LocationManager.shared
@@ -30,7 +30,7 @@ class MainViewController: UIViewController {
     private var currentCity: String = ""
     
     var weatherInLocation = CityWeatherModel(cityName: "-", temp: 0, feelsLike: 0, weather: "-", humiditiy: 0, windSpeed: 0)
-    var cityList = [CityWeatherModel]()
+    var cityList: [String] = []
     
     var data = ["Ячейка 1", "Ячейка 2", "Ячейка 3"]
     
@@ -61,6 +61,7 @@ class MainViewController: UIViewController {
         fetchCurrentTime()
         fetchCurrentWeatherInCurrentLocation()
         
+        searchTextField.delegate = self
         addSearchTextField()
         addWeatherImageView()
         addCityNameLabel()
@@ -285,6 +286,36 @@ extension MainViewController{
 }
 
 
+//MARK: - Extension to set searchField
+
+extension MainViewController{
+    
+    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+        searchTextField.resignFirstResponder()
+        searchCity()
+        searchTextField.text = ""
+        return true
+    }
+    
+    func searchCity(){
+        if searchTextField.text == ""{
+            return
+        }
+        
+        let geocoder = CLGeocoder()
+        geocoder.geocodeAddressString(searchTextField.text!){ [weak self] (city, error) in
+            guard let city = city?.first else{
+                self?.presentAlertError(error: "Unknown city!")
+                return
+            }
+            if let cityName = city.locality{
+                self?.cityList.append(cityName)
+            }
+            
+        }
+    }
+}
+
 //MARK: - Extension to add CollectionView
 
 extension MainViewController: UICollectionViewDataSource, UICollectionViewDelegate, UICollectionViewDelegateFlowLayout{
@@ -361,10 +392,7 @@ extension MainViewController{
             case .success(let forecast):
                 self?.createArray(dayArray: forecast.forecast.forecastday)
             case .failure(let failure):
-                let alertController = UIAlertController(title: "Error", message: "Error of fetching forecast", preferredStyle: .alert)
-                let alertAction = UIAlertAction(title: "F*CK THIS APPLICATION!", style: .cancel)
-                alertController.addAction(alertAction)
-                self?.present(alertController, animated: true)
+                self?.presentAlertError(error: "Error in fetching hour forecast")
                 print(failure)
             }
         }
@@ -389,10 +417,7 @@ extension MainViewController{
                 self?.weatherData[2].value = "\(String(weather.humiditiy))%"
                 self?.addCollectionView()
             case .failure(let error):
-                let alertController = UIAlertController(title: "Error", message: "Error of fetching weather", preferredStyle: .alert)
-                let alertAction = UIAlertAction(title: "F*CK THIS APPLICATION!", style: .cancel)
-                alertController.addAction(alertAction)
-                self?.present(alertController, animated: true)
+                self?.presentAlertError(error: "Error in fetching current weather")
                 print(error)
             }
             
@@ -412,6 +437,16 @@ extension MainViewController{
             }
         }
     }
+}
+
+extension MainViewController{
+    private func presentAlertError(error: String){
+        let alertController = UIAlertController(title: "Error!", message: error, preferredStyle: .alert)
+        let alertAction = UIAlertAction(title: "Okey", style: .cancel)
+        alertController.addAction(alertAction)
+        present(alertController, animated: true)
+    }
+    
 }
 
 extension MainViewController{
