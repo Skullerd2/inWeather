@@ -63,6 +63,7 @@ class MainViewController: UIViewController, UITextFieldDelegate {
         
         searchTextField.delegate = self
         addSearchTextField()
+//        addPageControl()
         addWeatherImageView()
         addCityNameLabel()
         addLocationImage()
@@ -71,7 +72,6 @@ class MainViewController: UIViewController, UITextFieldDelegate {
         addTableView()
         addTodayWeatherLabel()
         addForecastButton()
-        //        addCollectionView()
     }
     
     
@@ -87,7 +87,6 @@ class MainViewController: UIViewController, UITextFieldDelegate {
             currentDate = calendar.date(byAdding: .hour, value: 1, to: currentDate)!
             let hourString = dateFormatter.string(from: currentDate)
             if i == 0{
-                print(hourString)
                 currentHour = Int(hourString.prefix(2))!
             }
             time.append("\(hourString)")
@@ -238,7 +237,7 @@ extension MainViewController{
         weatherImageView.contentMode = .scaleAspectFill
         view.addSubview(weatherImageView)
         NSLayoutConstraint.activate([
-            weatherImageView.topAnchor.constraint(equalTo: searchTextField.bottomAnchor, constant: 40),
+            weatherImageView.topAnchor.constraint(equalTo: pageControl.bottomAnchor, constant: 20),
             weatherImageView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             weatherImageView.widthAnchor.constraint(equalToConstant: view.frame.height / 7),
             weatherImageView.heightAnchor.constraint(equalTo: weatherImageView.widthAnchor),
@@ -271,18 +270,18 @@ extension MainViewController{
         searchTextField.attributedPlaceholder = NSAttributedString(string: "Search Location", attributes: attributes)
     }
     
-    //    func addPageControl(){
-    //        pageControl.currentPage = 1
-    //        pageControl.numberOfPages = 3
-    //        pageControl.pageIndicatorTintColor = .fromHex("001F70")
-    //        pageControl.backgroundColor = .fromHex("C4C4C4")
-    //        view.addSubview(pageControl)
-    //
-    //        NSLayoutConstraint.activate([
-    //            pageControl.topAnchor.constraint(equalTo: searchTextField.topAnchor, constant: 5)
-    //            pageControl.centerXAnchor.
-    //        ])
-    //    }
+//        func addPageControl(){
+//            pageControl.currentPage = 1
+//            pageControl.numberOfPages = 3
+//            pageControl.pageIndicatorTintColor = .fromHex("001F70")
+//            pageControl.backgroundColor = .fromHex("C4C4C4")
+//            view.addSubview(pageControl)
+//    
+//            NSLayoutConstraint.activate([
+//                pageControl.topAnchor.constraint(equalTo: searchTextField.topAnchor, constant: 5),
+//                pageControl.centerXAnchor.constraint(equalTo: view.centerXAnchor)
+//            ])
+//        }
 }
 
 
@@ -309,7 +308,12 @@ extension MainViewController{
                 return
             }
             if let cityName = city.locality{
-                self?.cityList.append(cityName)
+                let filterList = self?.cityList.filter{ $0 == cityName }
+                if !((self?.cityList.contains(cityName))!) ||
+                    (self?.cityList[0] == cityName && filterList?.count == 1){
+                    self?.cityList.append(cityName)
+                }
+                print(self?.cityList)
             }
             
         }
@@ -326,14 +330,9 @@ extension MainViewController: UICollectionViewDataSource, UICollectionViewDelega
         }
         cell.layer.cornerRadius = 11
         cell.timeLabel.text = time[indexPath.item]
-        if indexPath.row == 0{
-            cell.weatherImage.image = self.weatherImageView.image
-            cell.tempLabel.text = "\(degreeLabel.text!)°"
-        } else{
-            if forecastOneHourWeather.count >= 23{
-                updateImageForecast(imageView: &cell.weatherImage, code: forecastOneHourWeather[indexPath.item])
-                cell.tempLabel.text = "\(forecastOneHourTemp[indexPath.item])°"
-            }
+        if forecastOneHourWeather.count >= 23{
+            updateImageForecast(imageView: &cell.weatherImage, code: forecastOneHourWeather[indexPath.item])
+            cell.tempLabel.text = "\(forecastOneHourTemp[indexPath.item])°"
         }
         return cell
     }
@@ -406,8 +405,6 @@ extension MainViewController{
             switch result{
             case .success(let weather):
                 self?.weather = weather
-                //                    let newCity = CityWeatherModel(cityName: city, temp: weather.main!.temp, weather: weather.weather[0]!.description, humiditiy: weather.main!.humidity, windSpeed: weather.wind!.speed, rain: weather.rain?.oneHour, snow: weather.snow?.oneHour)
-                //                    self?.cityList.append(newCity)
                 let weather = CityWeatherModel(cityName: city, temp: weather.current!.tempC, feelsLike: weather.current!.feelslikeC, weather: weather.current!.condition.code, humiditiy: weather.current!.humidity, windSpeed: weather.current!.windMph)
                 print(weather)
                 self?.weatherInLocation = weather
@@ -433,6 +430,7 @@ extension MainViewController{
             self?.locationManager.getCity(lat: lat, lon: lon) { location in
                 city = location
                 self?.cityNameLabel.text = city
+                self?.cityList.append(city)
                 self?.fetchCurrentWeather(lat: lat, lon: lon, city: city)
                 print(city)
             }
@@ -453,7 +451,7 @@ extension MainViewController{
 extension MainViewController{
     private func createArray(dayArray: [ForecastDay]){
         print(dayArray)
-        for i in currentHour...23{
+        for i in currentHour-1...23{
             forecastOneHourTemp.append(Int(truncating: NSDecimalNumber(decimal: dayArray[0].hour[i].tempC)))
             forecastOneHourWeather.append(dayArray[0].hour[i].condition.code)
         }

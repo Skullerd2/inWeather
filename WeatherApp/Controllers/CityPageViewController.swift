@@ -18,6 +18,9 @@ class CityPageViewController: UIPageViewController, UIPageViewControllerDataSour
     }
     
     func pageViewController(for index: Int) -> MainViewController?{
+        if index < 0 || index >= mainVC.cityList.count{
+            return nil
+        }
         return nil
     }
 }
