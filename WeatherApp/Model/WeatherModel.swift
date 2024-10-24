@@ -1,49 +1,28 @@
 import Foundation
 
 struct WeatherModel: Decodable{
+    let current: CurrentWeather?
     
-    var weather: [WeatherData?]
-    var main: MainData?
-    var wind: WindData?
-    var rain: RainData?
-    var snow: SnowData?
-    
-    init(weather: WeatherData?, main: MainData?, wind: WindData?, rain: RainData?, snow: SnowData?) {
-        self.main = main
-        self.weather = [weather]
-        self.wind = wind
-        self.rain = rain
-        self.snow = snow
+    init(current: CurrentWeather? = nil) {
+        self.current = current
     }
 }
 
-struct WeatherData: Decodable{
-    let main: String
-    let description: String
-}
-
-struct MainData: Decodable{
-    let temp: Double
-    let feelsLike: Double
+struct CurrentWeather: Decodable{
+    let tempC: Double
+    let feelslikeC: Double
+    let windMph: Double
     let humidity: Int
-}
-
-struct WindData: Decodable{
-    let speed: Double
-}
-
-struct RainData: Decodable{
-    let oneHour: Double
-    
-    enum CodingKeys: String, CodingKey{
-        case oneHour = "1h"
+    let condition: ConditionWeather
+    init(tempC: Decimal, feelslikeC: Decimal, windMph: Decimal, humidity: Int, condition: ConditionWeather) {
+        self.tempC = (tempC as NSDecimalNumber).doubleValue
+        self.feelslikeC = (feelslikeC as NSDecimalNumber).doubleValue
+        self.windMph = (feelslikeC as NSDecimalNumber).doubleValue
+        self.humidity = humidity
+        self.condition = condition
     }
 }
 
-struct SnowData: Decodable{
-    let oneHour: Double
-    
-    enum CodingKeys: String, CodingKey{
-        case oneHour = "1h"
-    }
+struct ConditionWeather: Decodable{
+    let code: Int
 }

@@ -25,11 +25,11 @@ class MainViewController: UIViewController, UITextFieldDelegate {
     private let locationManager = LocationManager.shared
     
     private var location = LocationModel(main: nil)
-    private var weather = WeatherModel(weather: nil, main: nil, wind: nil, rain: nil, snow: nil)
+    private var weather = WeatherModel(current: nil)
     
     private var currentCity: String = ""
     
-    var weatherInLocation = CityWeatherModel(cityName: "-", temp: 0, feelsLike: 0, weather: "-", humiditiy: 0, windSpeed: 0)
+    var weatherInLocation = CityWeatherModel(cityName: "-", temp: 0, feelsLike: 0, weather: 1000, humiditiy: 0, windSpeed: 0)
     var cityList: [String] = []
     
     var data = ["Ячейка 1", "Ячейка 2", "Ячейка 3"]
@@ -57,7 +57,7 @@ class MainViewController: UIViewController, UITextFieldDelegate {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
+        view.backgroundColor = .white
         fetchCurrentTime()
         fetchCurrentWeatherInCurrentLocation()
         
@@ -330,8 +330,10 @@ extension MainViewController: UICollectionViewDataSource, UICollectionViewDelega
             cell.weatherImage.image = self.weatherImageView.image
             cell.tempLabel.text = "\(degreeLabel.text!)°"
         } else{
-            updateImageForecast(imageView: &cell.weatherImage, code: forecastOneHourWeather[indexPath.item])
-            cell.tempLabel.text = "\(forecastOneHourTemp[indexPath.item])°"
+            if forecastOneHourWeather.count >= 23{
+                updateImageForecast(imageView: &cell.weatherImage, code: forecastOneHourWeather[indexPath.item])
+                cell.tempLabel.text = "\(forecastOneHourTemp[indexPath.item])°"
+            }
         }
         return cell
     }
@@ -395,6 +397,7 @@ extension MainViewController{
                 self?.presentAlertError(error: "Error in fetching hour forecast")
                 print(failure)
             }
+            self?.addCollectionView()
         }
     }
     
@@ -405,17 +408,15 @@ extension MainViewController{
                 self?.weather = weather
                 //                    let newCity = CityWeatherModel(cityName: city, temp: weather.main!.temp, weather: weather.weather[0]!.description, humiditiy: weather.main!.humidity, windSpeed: weather.wind!.speed, rain: weather.rain?.oneHour, snow: weather.snow?.oneHour)
                 //                    self?.cityList.append(newCity)
-                let weather = CityWeatherModel(cityName: city, temp: weather.main!.temp, feelsLike: weather.main!.feelsLike, weather: weather.weather[0]!.description, humiditiy: weather.main!.humidity, windSpeed: weather.wind!.speed, rain: weather.rain?.oneHour, snow: weather.snow?.oneHour)
+                let weather = CityWeatherModel(cityName: city, temp: weather.current!.tempC, feelsLike: weather.current!.feelslikeC, weather: weather.current!.condition.code, humiditiy: weather.current!.humidity, windSpeed: weather.current!.windMph)
                 print(weather)
                 self?.weatherInLocation = weather
                 self?.tableView.reloadData()
-                self?.updateImage(imageView: &self!.weatherImageView ,main: (self?.weather.weather[0]!.main)!, description: (self?.weather.weather[0]!.description)!)
+                self?.updateImageForecast(imageView: &self!.weatherImageView, code: weather.weatherCode)
                 self?.degreeLabel.text = String(Int((weather.temp).rounded()))
-                //Заглушка
                 self?.weatherData[0].value = "\(String(Int((weather.feelsLike).rounded())))°"
                 self?.weatherData[1].value = "\(String(Int((weather.windSpeed).rounded())))m/h"
                 self?.weatherData[2].value = "\(String(weather.humiditiy))%"
-                self?.addCollectionView()
             case .failure(let error):
                 self?.presentAlertError(error: "Error in fetching current weather")
                 print(error)
