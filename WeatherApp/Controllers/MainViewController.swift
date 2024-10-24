@@ -27,10 +27,10 @@ class MainViewController: UIViewController, UITextFieldDelegate {
     private var location = LocationModel(main: nil)
     private var weather = WeatherModel(current: nil)
     
-    private var currentCity: String = ""
+    var currentCity: String = ""
     
     var weatherInLocation = CityWeatherModel(cityName: "-", temp: 0, feelsLike: 0, weather: 1000, humiditiy: 0, windSpeed: 0)
-    var cityList: [String] = []
+    var cityList: [String] = [""]
     
     var data = ["Ячейка 1", "Ячейка 2", "Ячейка 3"]
     
@@ -40,7 +40,7 @@ class MainViewController: UIViewController, UITextFieldDelegate {
     var forecastOneHourTemp: [Int] = []
     var forecastOneHourWeather: [Int] = []
     var currentHour: Int = 0
-    
+    var currentIndex: Int = 0
     //Elements of interface
     let pageControl = UIPageControl()
     var weatherImageView = UIImageView()
@@ -59,14 +59,17 @@ class MainViewController: UIViewController, UITextFieldDelegate {
         super.viewDidLoad()
         view.backgroundColor = .white
         fetchCurrentTime()
-        fetchCurrentWeatherInCurrentLocation()
-        
+        if currentIndex == 0{
+            fetchCurrentWeatherInCurrentLocation()
+        }
         searchTextField.delegate = self
         addSearchTextField()
-//        addPageControl()
+        addPageControl()
         addWeatherImageView()
         addCityNameLabel()
-        addLocationImage()
+        if currentIndex == 0{
+            addLocationImage()
+        }
         addDegreeLabel()
         addDegreeSign()
         addTableView()
@@ -237,7 +240,7 @@ extension MainViewController{
         weatherImageView.contentMode = .scaleAspectFill
         view.addSubview(weatherImageView)
         NSLayoutConstraint.activate([
-            weatherImageView.topAnchor.constraint(equalTo: pageControl.bottomAnchor, constant: 20),
+            weatherImageView.topAnchor.constraint(equalTo: pageControl.bottomAnchor, constant: 15),
             weatherImageView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             weatherImageView.widthAnchor.constraint(equalToConstant: view.frame.height / 7),
             weatherImageView.heightAnchor.constraint(equalTo: weatherImageView.widthAnchor),
@@ -270,18 +273,19 @@ extension MainViewController{
         searchTextField.attributedPlaceholder = NSAttributedString(string: "Search Location", attributes: attributes)
     }
     
-//        func addPageControl(){
-//            pageControl.currentPage = 1
-//            pageControl.numberOfPages = 3
-//            pageControl.pageIndicatorTintColor = .fromHex("001F70")
-//            pageControl.backgroundColor = .fromHex("C4C4C4")
-//            view.addSubview(pageControl)
-//    
-//            NSLayoutConstraint.activate([
-//                pageControl.topAnchor.constraint(equalTo: searchTextField.topAnchor, constant: 5),
-//                pageControl.centerXAnchor.constraint(equalTo: view.centerXAnchor)
-//            ])
-//        }
+        func addPageControl(){
+            pageControl.currentPage = currentIndex
+            pageControl.numberOfPages = cityList.count
+            pageControl.currentPageIndicatorTintColor = .fromHex("001F70")
+            pageControl.pageIndicatorTintColor = .fromHex("C4C4C4")
+            pageControl.translatesAutoresizingMaskIntoConstraints = false
+            view.addSubview(pageControl)
+    
+            NSLayoutConstraint.activate([
+                pageControl.topAnchor.constraint(equalTo: searchTextField.bottomAnchor, constant: 5),
+                pageControl.centerXAnchor.constraint(equalTo: view.centerXAnchor)
+            ])
+        }
 }
 
 
@@ -310,8 +314,9 @@ extension MainViewController{
             if let cityName = city.locality{
                 let filterList = self?.cityList.filter{ $0 == cityName }
                 if !((self?.cityList.contains(cityName))!) ||
-                    (self?.cityList[0] == cityName && filterList?.count == 1){
+                    (self?.cityList[1] == cityName && filterList?.count == 1){
                     self?.cityList.append(cityName)
+                    self?.pageControl.numberOfPages = (self?.cityList.count)!
                 }
                 print(self?.cityList)
             }
