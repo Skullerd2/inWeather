@@ -18,12 +18,14 @@ class CityPageViewController: UIPageViewController, UIPageViewControllerDataSour
     func pageViewController(_ pageViewController: UIPageViewController, viewControllerBefore viewController: UIViewController) -> UIViewController? {
         let index = ((viewController as? MainViewController)?.currentIndex ?? 0) - 1
         mainVC.currentIndex = index
+        print(mainVC.cityList[index])
         return self.pageViewController(for: index)
     }
     
     func pageViewController(_ pageViewController: UIPageViewController, viewControllerAfter viewController: UIViewController) -> UIViewController? {
         let index = ((viewController as? MainViewController)?.currentIndex ?? 0) + 1
         mainVC.currentIndex = index
+        print(mainVC.cityList[index])
         return self.pageViewController(for: index)
     }
     

@@ -318,7 +318,6 @@ extension MainViewController{
                     self?.cityList.append(cityName)
                     self?.pageControl.numberOfPages = (self?.cityList.count)!
                 }
-                print(self?.cityList)
             }
             
         }
@@ -411,7 +410,6 @@ extension MainViewController{
             case .success(let weather):
                 self?.weather = weather
                 let weather = CityWeatherModel(cityName: city, temp: weather.current!.tempC, feelsLike: weather.current!.feelslikeC, weather: weather.current!.condition.code, humiditiy: weather.current!.humidity, windSpeed: weather.current!.windMph)
-                print(weather)
                 self?.weatherInLocation = weather
                 self?.tableView.reloadData()
                 self?.updateImageForecast(imageView: &self!.weatherImageView, code: weather.weatherCode)
@@ -435,9 +433,9 @@ extension MainViewController{
             self?.locationManager.getCity(lat: lat, lon: lon) { location in
                 city = location
                 self?.cityNameLabel.text = city
-                self?.cityList.append(city)
+                self?.cityList[0] = city
+                self?.currentCity = city
                 self?.fetchCurrentWeather(lat: lat, lon: lon, city: city)
-                print(city)
             }
         }
     }
@@ -455,7 +453,6 @@ extension MainViewController{
 
 extension MainViewController{
     private func createArray(dayArray: [ForecastDay]){
-        print(dayArray)
         for i in currentHour-1...23{
             forecastOneHourTemp.append(Int(truncating: NSDecimalNumber(decimal: dayArray[0].hour[i].tempC)))
             forecastOneHourWeather.append(dayArray[0].hour[i].condition.code)
@@ -468,7 +465,6 @@ extension MainViewController{
                 break
             }
         }
-        print(forecastOneHourTemp, forecastOneHourWeather)
     }
     
     private func updateImage(imageView: inout UIImageView, main: String, description: String){

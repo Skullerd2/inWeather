@@ -2,10 +2,15 @@ import Foundation
 
 struct WeatherModel: Decodable{
     let current: CurrentWeather?
-    
-    init(current: CurrentWeather? = nil) {
+    let loc: LocationStruct?
+    init(current: CurrentWeather? = nil, loc: LocationStruct? = nil) {
         self.current = current
+        self.loc = loc
     }
+}
+
+struct LocationStruct: Decodable{
+    let name: String
 }
 
 struct CurrentWeather: Decodable{

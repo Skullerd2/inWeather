@@ -38,7 +38,6 @@ class HourForecastCollectionViewCell: UICollectionViewCell {
         super.init(frame: frame)
         backgroundColor = .fromHex("FDFCFC")
         contentView.addSubview(weatherImage)
-//        contentView.addSubview(degreeSign)
         contentView.addSubview(tempLabel)
         contentView.addSubview(timeLabel)
         NSLayoutConstraint.activate([
@@ -52,10 +51,6 @@ class HourForecastCollectionViewCell: UICollectionViewCell {
             timeLabel.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
             timeLabel.bottomAnchor.constraint(equalTo: weatherImage.topAnchor),
             timeLabel.topAnchor.constraint(equalTo: contentView.topAnchor),
-//            degreeSign.topAnchor.constraint(equalTo: weatherImage.bottomAnchor, constant: (contentView.frame.height - weatherImage.frame.height) / 15),
-//            degreeSign.leadingAnchor.constraint(equalTo: tempLabel.trailingAnchor, constant: 1),
-//            degreeSign.heightAnchor.constraint(equalToConstant: contentView.frame.width / 15),
-//            degreeSign.widthAnchor.constraint(equalTo: degreeSign.heightAnchor)
         ])
     }
     
