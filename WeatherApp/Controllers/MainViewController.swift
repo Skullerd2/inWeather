@@ -30,21 +30,18 @@ class MainViewController: UIViewController, UITextFieldDelegate {
     var currentCity: String = ""
     
     var weatherInLocation = CityWeatherModel(cityName: "-", temp: 0, feelsLike: 0, weather: 1000, humiditiy: 0, windSpeed: 0)
-    var cityList: [String] = [""]
     
     var data = ["Ячейка 1", "Ячейка 2", "Ячейка 3"]
     
     var time: [String] = ["now"]
     
-    var weatherData: [(key: String, value: String)] = [("Feels like", "19"), ("Wind", "19km/h"), ("Humidity", "64%")]
+    var weatherData: [(key: String, value: String)] = [("Feels like", "-"), ("Wind", "-"), ("Humidity", "-")]
     var forecastOneHourTemp: [Int] = []
     var forecastOneHourWeather: [Int] = []
     var currentHour: Int = 0
     var currentIndex: Int = 0
     //Elements of interface
-    let pageControl = UIPageControl()
     var weatherImageView = UIImageView()
-    let searchTextField = UITextField()
     let cityNameLabel = UILabel()
     let degreeLabel = UILabel()
     let degreeSign = UIImageView()
@@ -52,6 +49,7 @@ class MainViewController: UIViewController, UITextFieldDelegate {
     var tableView = UITableView()
     let todayWeatherLabel = UILabel()
     let forecastButton = UIButton()
+    var isCollectionViewExists = false
     
     let layout = UICollectionViewFlowLayout()
     
@@ -59,24 +57,15 @@ class MainViewController: UIViewController, UITextFieldDelegate {
         super.viewDidLoad()
         view.backgroundColor = .white
         fetchCurrentTime()
-        if currentIndex == 0{
-            fetchCurrentWeatherInCurrentLocation()
-        }
-        searchTextField.delegate = self
-        addSearchTextField()
-        addPageControl()
+        fetchCurrentWeatherInCurrentLocation()
         addWeatherImageView()
         addCityNameLabel()
-        if currentIndex == 0{
-            addLocationImage()
-        }
+        addLocationImage()
         addDegreeLabel()
         addDegreeSign()
         addTableView()
         addTodayWeatherLabel()
-        addForecastButton()
     }
-    
     
     func fetchCurrentTime(){
         let dateFormatter = DateFormatter()
@@ -127,22 +116,6 @@ extension MainViewController{
             collectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: 0),
             collectionView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -2),
             collectionView.topAnchor.constraint(equalTo: todayWeatherLabel.bottomAnchor, constant: 13)
-        ])
-    }
-    
-    func addForecastButton(){
-        forecastButton.setTitle("Next 7 days", for: .normal)
-        forecastButton.setImage(UIImage(systemName: "chevron.right"), for: .normal)
-        forecastButton.semanticContentAttribute = .forceRightToLeft
-        forecastButton.tintColor = .gray
-        forecastButton.setTitleColor(.gray, for: .normal)
-        forecastButton.titleLabel?.font = UIFont(name: "Poppins-Medium", size: 15)
-        forecastButton.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(forecastButton)
-        
-        NSLayoutConstraint.activate([
-            forecastButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -32),
-            forecastButton.topAnchor.constraint(equalTo: tableView.bottomAnchor, constant: 5),
         ])
     }
     
@@ -240,87 +213,11 @@ extension MainViewController{
         weatherImageView.contentMode = .scaleAspectFill
         view.addSubview(weatherImageView)
         NSLayoutConstraint.activate([
-            weatherImageView.topAnchor.constraint(equalTo: pageControl.bottomAnchor, constant: 15),
+            weatherImageView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 70),
             weatherImageView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             weatherImageView.widthAnchor.constraint(equalToConstant: view.frame.height / 7),
             weatherImageView.heightAnchor.constraint(equalTo: weatherImageView.widthAnchor),
         ])
-    }
-    
-    func addSearchTextField(){
-        searchTextField.translatesAutoresizingMaskIntoConstraints = false
-        searchTextField.backgroundColor = UIColor(red: 0.992, green: 0.988, blue: 0.988, alpha: 1)
-        searchTextField.setPlaceholder("Search Location", icon: UIImage(systemName: "magnifyingglass"))
-        searchTextField.layer.cornerRadius = 15
-        searchTextField.font = UIFont(name: "Poppins-Regular", size: 15)
-        view.addSubview(searchTextField)
-        
-        NSLayoutConstraint.activate([
-            searchTextField.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 16),
-            searchTextField.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -16),
-            searchTextField.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 0),
-            searchTextField.heightAnchor.constraint(equalToConstant: 50)
-        ])
-        
-        let attributes = [
-            NSAttributedString.Key.foregroundColor: UIColor.fromHex("C4C4C4"),
-            NSAttributedString.Key.paragraphStyle: {
-                let paragraphStyle = NSMutableParagraphStyle()
-                paragraphStyle.headIndent = 16
-                return paragraphStyle
-            }()
-        ]
-        searchTextField.attributedPlaceholder = NSAttributedString(string: "Search Location", attributes: attributes)
-    }
-    
-        func addPageControl(){
-            pageControl.currentPage = currentIndex
-            pageControl.numberOfPages = cityList.count
-            pageControl.currentPageIndicatorTintColor = .fromHex("001F70")
-            pageControl.pageIndicatorTintColor = .fromHex("C4C4C4")
-            pageControl.translatesAutoresizingMaskIntoConstraints = false
-            view.addSubview(pageControl)
-    
-            NSLayoutConstraint.activate([
-                pageControl.topAnchor.constraint(equalTo: searchTextField.bottomAnchor, constant: 5),
-                pageControl.centerXAnchor.constraint(equalTo: view.centerXAnchor)
-            ])
-        }
-}
-
-
-//MARK: - Extension to set searchField
-
-extension MainViewController{
-    
-    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
-        searchTextField.resignFirstResponder()
-        searchCity()
-        searchTextField.text = ""
-        return true
-    }
-    
-    func searchCity(){
-        if searchTextField.text == ""{
-            return
-        }
-        
-        let geocoder = CLGeocoder()
-        geocoder.geocodeAddressString(searchTextField.text!){ [weak self] (city, error) in
-            guard let city = city?.first else{
-                self?.presentAlertError(error: "Unknown city!")
-                return
-            }
-            if let cityName = city.locality{
-                let filterList = self?.cityList.filter{ $0 == cityName }
-                if !((self?.cityList.contains(cityName))!) ||
-                    (self?.cityList[1] == cityName && filterList?.count == 1){
-                    self?.cityList.append(cityName)
-                    self?.pageControl.numberOfPages = (self?.cityList.count)!
-                }
-            }
-            
-        }
     }
 }
 
@@ -396,11 +293,11 @@ extension MainViewController{
             switch result {
             case .success(let forecast):
                 self?.createArray(dayArray: forecast.forecast.forecastday)
+                self?.addCollectionView()
             case .failure(let failure):
                 self?.presentAlertError(error: "Error in fetching hour forecast")
                 print(failure)
             }
-            self?.addCollectionView()
         }
     }
     
@@ -433,7 +330,6 @@ extension MainViewController{
             self?.locationManager.getCity(lat: lat, lon: lon) { location in
                 city = location
                 self?.cityNameLabel.text = city
-                self?.cityList[0] = city
                 self?.currentCity = city
                 self?.fetchCurrentWeather(lat: lat, lon: lon, city: city)
             }

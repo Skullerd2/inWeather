@@ -1,11 +1,10 @@
 import Foundation
 import Alamofire
 
-
 final class NetworkManager{
     
     static let shared = NetworkManager()
-    
+    private let key: String = "ced4c7d19b814dbf8f7150329240411"
     private init() {}
     
     func fetchCurrentWeather(lat: Double, lon: Double, completion: @escaping (Result<WeatherModel, AFError>) -> Void){
@@ -13,7 +12,7 @@ final class NetworkManager{
         let decoder = JSONDecoder()
         decoder.keyDecodingStrategy = .convertFromSnakeCase
         
-        AF.request("https://api.weatherapi.com/v1/current.json?key=8be306a52fd848c0972142834241910&q=\(lat),\(lon)&aqi=no")
+        AF.request("https://api.weatherapi.com/v1/current.json?key=\(key)&q=\(lat),\(lon)&aqi=no")
             .validate()
             .responseDecodable(of: WeatherModel.self, decoder: decoder) { dataResponse in
                 switch dataResponse.result{
@@ -32,7 +31,7 @@ final class NetworkManager{
         let decoder = JSONDecoder()
         decoder.keyDecodingStrategy = .convertFromSnakeCase
         
-        AF.request("https://api.weatherapi.com/v1/current.json?key=8be306a52fd848c0972142834241910&q=\(city)&aqi=no")
+        AF.request("https://api.weatherapi.com/v1/current.json?key=\(key)&q=\(city)&aqi=no")
             .validate()
             .responseDecodable(of: WeatherModel.self, decoder: decoder) { dataResponse in
                 switch dataResponse.result{
@@ -50,7 +49,7 @@ final class NetworkManager{
         let decoder = JSONDecoder()
         decoder.keyDecodingStrategy = .convertFromSnakeCase
         
-        AF.request("https://api.weatherapi.com/v1/forecast.json?key=8be306a52fd848c0972142834241910&q=\(lat),\(lon)&days=3&aqi=no&alerts=no")
+        AF.request("https://api.weatherapi.com/v1/forecast.json?key=\(key)&q=\(lat),\(lon)&days=3&aqi=no&alerts=no")
             .validate()
             .responseDecodable(of: HourlyForecastModel.self, decoder: decoder) { dataResponse in
                 switch dataResponse.result{
@@ -68,7 +67,7 @@ final class NetworkManager{
         let decoder = JSONDecoder()
         decoder.keyDecodingStrategy = .convertFromSnakeCase
         
-        AF.request("https://api.weatherapi.com/v1/forecast.json?key=8be306a52fd848c0972142834241910&q=\(city)&days=3&aqi=no&alerts=no")
+        AF.request("https://api.weatherapi.com/v1/forecast.json?key=\(key)&q=\(city)&days=3&aqi=no&alerts=no")
             .validate()
             .responseDecodable(of: HourlyForecastModel.self, decoder: decoder) { dataResponse in
                 switch dataResponse.result{
